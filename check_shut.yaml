@@ -1,0 +1,20 @@
+#author:@prakashneeraj
+# this is script to check if any link id is down.
+
+
+---
+- hosts: eos_demo_group
+  gather_facts: no
+  connection: local
+
+  tasks:
+    - name: show ip int br output
+      eos_command:
+        host: "{{ inventory_hostname }}"
+        provider: "{{ provider }}"
+        commands: show ip interface brief
+      register: show
+    - name: check if any interface is down  
+      debug:
+        msg: 
+      when: show.stdout[0] | search("down")

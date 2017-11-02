@@ -1,0 +1,6 @@
+#jinja2: trim_blocks: False
+#jinja2: lstrip_blocks: False
+
+{% for inter in interfaces %}
+sh ip int {{inter}} br
+{% endfor %}

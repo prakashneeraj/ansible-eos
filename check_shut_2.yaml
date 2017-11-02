@@ -1,0 +1,59 @@
+#author: @prakashneeraj
+#this is the script to check the down interfaces of an eos device and making them up
+
+
+---
+- hosts: eos_demo_group
+  gather_facts: no
+  connection: local
+
+  tasks:
+    - name: sh ip interface before
+      eos_command:
+        host: "{{ inventory_hostname }}"
+        provider: "{{ provider }}"
+        commands: 
+          - "show ip interface brief"
+      register: show
+
+    - name: device login
+      debug: 
+        msg: "device login sucessfull"
+    
+    - name: saving o/p before
+      copy:
+        content: "{{ show.stdout[0] }}"
+        dest: "./output/sh_ip_before_{{ inventory_hostname}}.txt"
+
+    - name: checking for if port is down
+      eos_config:
+        host: "{{ inventory_hostname }}"
+        provider: "{{ provider }}"
+        lines: 
+          - "interface {{ item.split(' ')[0] }} "
+          - "no shut"
+          - "do wr"
+      with_items: "{{ show.stdout_lines}}"
+      when : item | search('down')
+    
+    - pause:
+        seconds: 5
+    
+    - name: sh ip int after
+      eos_command:
+        host: "{{ inventory_hostname }}"
+        provider: "{{ provider }}"
+        commands: 
+          - "show ip interface brief"
+      register: conf
+
+    - name: saving o/p after
+      copy:
+        content: "{{conf.stdout[0]}}"
+        dest: "./output/sh_ip_after_{{ inventory_hostname}}.txt"
+
+    - debug:
+        msg: "Please check ./output/sh_ip_before_{{ inventory_hostname }}.txt for down interface"
+
+    - debug:
+        msg: "Please check ./output/sh_ip_after_{{ inventory_hostname}}.txt for interface status after running script"
